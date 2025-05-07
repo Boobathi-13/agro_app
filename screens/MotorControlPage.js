@@ -249,9 +249,8 @@
 //   );
 // }
 
-
-import React, { useEffect, useState } from 'react';
-import { View, Text, TouchableOpacity, Animated, Easing, ScrollView } from 'react-native';
+import React, { useEffect, useState, useCallback } from 'react';
+import { View, Text, TouchableOpacity, Animated, Easing, ScrollView, RefreshControl, ToastAndroid } from 'react-native';
 import Svg, { Circle, Rect, Text as SvgText } from 'react-native-svg';
 import { db } from '../firebase';
 import { ref, onValue, set, push, get, update } from 'firebase/database';
@@ -267,6 +266,8 @@ export default function MotorControlPage() {
   const [autoMode, setAutoMode] = useState(false);
   // Add this flag to prevent infinite loops during updates
   const [isUpdating, setIsUpdating] = useState(false);
+  // Add refresh state
+  const [refreshing, setRefreshing] = useState(false);
 
   const pulseAnim = new Animated.Value(0);
 
@@ -307,6 +308,44 @@ export default function MotorControlPage() {
       return () => clearInterval(interval);
     }
   }, [lastChanged]);
+
+  // Function to fetch data from Firebase
+  const fetchData = useCallback(async () => {
+    try {
+      const motorRef = ref(db, 'motor/');
+      const historyRef = ref(db, 'motorHistory/');
+      
+      // Get motor status data
+      const motorSnapshot = await get(motorRef);
+      if (motorSnapshot.exists()) {
+        const data = motorSnapshot.val();
+        setStatus(data.status);
+        setLastChanged(data.lastChanged);
+        
+        if (data.manualOverride !== undefined) {
+          setManualOverride(data.manualOverride);
+        }
+        
+        if (data.autoMode !== undefined) {
+          setAutoMode(data.autoMode);
+        }
+      }
+      
+      // Get history data
+      const historySnapshot = await get(historyRef);
+      if (historySnapshot.exists()) {
+        const history = Object.entries(historySnapshot.val()).map(([id, entry]) => ({
+          id,
+          status: entry.status,
+          timestamp: entry.timestamp,
+        }));
+        setStatusHistory(history.sort((a, b) => a.timestamp - b.timestamp));
+      }
+    } catch (error) {
+      console.error("Error fetching data:", error);
+      ToastAndroid.show("Failed to refresh data", ToastAndroid.SHORT);
+    }
+  }, []);
 
   useEffect(() => {
     const motorRef = ref(db, 'motor/');
@@ -352,6 +391,17 @@ export default function MotorControlPage() {
 
     return () => unsubscribe();
   }, [isUpdating, manualOverride, autoMode]);  // Add dependencies to prevent stale closures
+
+  // Implement the onRefresh function
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    fetchData().then(() => {
+      setRefreshing(false);
+      ToastAndroid.show("Data refreshed!", ToastAndroid.SHORT);
+    }).catch(() => {
+      setRefreshing(false);
+    });
+  }, [fetchData]);
 
   const toggleMotor = async () => {
     if (!manualOverride || autoMode) return;
@@ -473,7 +523,18 @@ export default function MotorControlPage() {
   const graphData = generateGraphData();
 
   return (
-    <ScrollView className="bg-gray-900 flex-1">
+    <ScrollView 
+      className="bg-gray-900 flex-1"
+      refreshControl={
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={onRefresh}
+          colors={['#4ADE80']}
+          progressBackgroundColor="#2d3748"
+          progressViewOffset={80}
+        />
+      }
+    >
       <View className="w-full items-center pt-[10%] pb-12">
         <Text className="text-3xl font-bold text-gray-200 mb-6">Motor Control</Text>
 
