@@ -1,8 +1,8 @@
 {
   "expo": {
-    "name": "agro_app",
+    "name": "Agro_app",
     "slug": "agro_app",
-    "version": "1.0.1",
+    "version": "1.1.0",
     "orientation": "portrait",
     "icon": "./assets/farmer.png",
     "userInterfaceStyle": "light",
@@ -16,14 +16,29 @@
       "supportsTablet": true
     },
     "android": {
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_BACKGROUND_LOCATION",
+        "ACCESS_NETWORK_STATE",
+        "ACCESS_WIFI_STATE",
+        "INTERNET"
+      ],
       "adaptiveIcon": {
         "foregroundImage": "./assets/farmer.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "package": "com.boobathi.agro_app"
     },
     "web": {
       "favicon": "./assets/farmer.png"
+    },
+    "displayName": "Agro app",
+    "extra": {
+      "eas": {
+        "projectId": "10ccf73b-2379-46f2-bd3e-7dfee5eae640"
+      }
     }
   }
 }
