@@ -42,6 +42,7 @@
 
 
 
+// HomePage
 import React, { useEffect, useState, useCallback } from 'react';
 import {
   View,
@@ -186,6 +187,24 @@ export default function HomePage() {
         bezier
         style={{ borderRadius: 16 }}
         verticalLabelRotation={45}
+        yAxisLabel={chartColors.yAxisLabel || ""}
+        renderDotContent={({ x, y, index }) => (
+          <Text
+            key={index}
+            style={{
+              position: 'absolute',
+              top: y - 15,
+              left: x - 10,
+              color: chartColors.dotStroke,
+              fontSize: 10,
+            }}
+          >
+            {dataSet[index]}{unit}
+          </Text>
+        )}
+        withVerticalLabels={true}
+        withHorizontalLabels={true}
+        fromZero={true}
       />
     </View>
   );
@@ -234,6 +253,7 @@ export default function HomePage() {
           lineColor: (opacity) => `rgba(30, 100, 50, ${opacity})`,
           labelColorCode: "#2e7d32",
           dotStroke: "#1b5e20",
+          fromZero: true
         })}
 
         {renderChart("Humidity (%)", humidity, "%", {
@@ -243,6 +263,7 @@ export default function HomePage() {
           lineColor: (opacity) => `rgba(13, 71, 161, ${opacity})`,
           labelColorCode: "#0d47a1",
           dotStroke: "#0d47a1",
+          fromZero: true
         })}
       </ScrollView>
     </View>
